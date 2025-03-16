@@ -1,0 +1,55 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 472d0f5aa8d21e3498d6be75a12175c8, type: 3}
+  m_Name: Block Texture Library
+  m_EditorClassIdentifier: 
+  Data:
+  - BlockType: 0
+    IsSolid: 0
+    TopFace: 0
+    BottomFace: 0
+    RightFace: 0
+    LeftFace: 0
+    FrontFace: 0
+    BackFace: 0
+  - BlockType: 1
+    IsSolid: 1
+    TopFace: 3
+    BottomFace: 1
+    RightFace: 2
+    LeftFace: 2
+    FrontFace: 2
+    BackFace: 2
+  - BlockType: 2
+    IsSolid: 1
+    TopFace: 1
+    BottomFace: 1
+    RightFace: 1
+    LeftFace: 1
+    FrontFace: 1
+    BackFace: 1
+  - BlockType: 3
+    IsSolid: 1
+    TopFace: 4
+    BottomFace: 4
+    RightFace: 4
+    LeftFace: 4
+    FrontFace: 4
+    BackFace: 4
+  - BlockType: 4
+    IsSolid: 1
+    TopFace: 0
+    BottomFace: 0
+    RightFace: 0
+    LeftFace: 0
+    FrontFace: 0
+    BackFace: 0
