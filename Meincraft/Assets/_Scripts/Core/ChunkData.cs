@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using NUnit.Framework;
 using UnityEngine;
 
 public class ChunkPosition
@@ -86,7 +87,7 @@ public class ChunkData
 
     public void SetBlock(int x, int y, int z, byte block)
     {
-        _blocks[x, y, z] = block;
+        if(IsWithinChunk(x,y,z)) _blocks[x, y, z] = block;
     }
 
     public void SetBlock(Vector3Int blockPos, byte block)
