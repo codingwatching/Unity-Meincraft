@@ -1,3 +1,5 @@
+using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum BlockType : byte
@@ -14,20 +16,30 @@ public class Globals
     public static readonly int ChunkHeight = 256;
     public static readonly int PlayerHeight = 2;
 
-    public static readonly Vector2Int[] Directions_2D = new[]
+
+    public enum Direction
     {
-        new Vector2Int(0, 1),
-        new Vector2Int(0, -1),
-        new Vector2Int(1, 0),
-        new Vector2Int(-1, 0)
+        UP = 0,
+        DOWN = 1,
+        FRONT = 2,
+        BACK = 3,
+        LEFT = 4,
+        RIGHT = 5
+    }
+    public static readonly Vector3Int[] Directions_2D = new Vector3Int[]
+    {
+        Vector3Int.forward,
+        Vector3Int.back,
+        Vector3Int.left,
+        Vector3Int.right
     };
-    public static readonly Vector3Int[] Directions_3D = new[]
+    public static readonly Vector3Int[] Directions_3D = new Vector3Int[]
     {
-        new Vector3Int(0, 0, 1),
-        new Vector3Int(0, 1, 0),
-        new Vector3Int(1, 0, 0),
-        new Vector3Int(0, 0, -1),
-        new Vector3Int(0, -1, 0),
-        new Vector3Int(-1, 0, 0)
+        Vector3Int.up ,
+        Vector3Int.down ,
+        Vector3Int.forward,
+        Vector3Int.back,
+        Vector3Int.left,
+        Vector3Int.right
     };
 }

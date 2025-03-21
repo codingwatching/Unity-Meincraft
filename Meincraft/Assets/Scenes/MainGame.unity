@@ -1011,8 +1011,8 @@ MonoBehaviour:
   SpawnPlayerAtWorldCenter: 1
   chunkPool: {fileID: 1468448160}
   ChunkLoadRadius: 16
-  chunkLoadPerFrame: 2
-  chunkRemovePerFrame: 8
+  chunkLoadPerFrame: 4
+  chunkRemovePerFrame: 4
 --- !u!4 &1468448159
 Transform:
   m_ObjectHideFlags: 0

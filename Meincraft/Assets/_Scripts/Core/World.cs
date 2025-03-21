@@ -70,7 +70,7 @@ public class World : Singleton<World>
         player.Spawn(new Vector3(xPos + 0.5f, height + 1.5f, zPos + 0.5f));
         
         playerCurrentChunkCoordinates = GetPlayerChunkCoordinates();
-        LoadChunksAroundPlayer(GetChunkStacksAroundPlayer(playerCurrentChunkCoordinates));
+        LoadChunksAroundPlayer(GetChunkStacksAroundPlayer());
         
     }
     private void Update()
@@ -117,24 +117,17 @@ public class World : Singleton<World>
 
     private void OnPlayerChunkChanged()
     {
-        Vector2Int[] chunkStacksAroundPlayer = GetChunkStacksAroundPlayer(playerCurrentChunkCoordinates);
-        
-        HashSet<Vector2Int> chunkStacksToKeep = new HashSet<Vector2Int>(chunkStacksAroundPlayer);
+        Vector2Int[] chunkStacksAroundPlayer = GetChunkStacksAroundPlayer();
         
         List<Vector2Int> chunksToRemoveXZ = new List<Vector2Int>();
-        foreach (var loadedChunkStack in _activeChunks)
-        {
-            //if the chunk is loaded but outside the view distance
-            if (!chunkStacksToKeep.Contains(loadedChunkStack))
-            {
-                chunksToRemoveXZ.Add(loadedChunkStack);
-            }
-        }
         
-        _chunksToRemove.Clear();//Cleaning the queue for avoid repetitions
-        foreach (var chunkCoordXZ in chunksToRemoveXZ)
+        //Cleaning the queue for avoid repetitions
+        _chunksToRemove.Clear();
+        //if the chunk is loaded but outside the view distance
+        foreach (var loadedChunkStack in _activeChunks.Except(chunkStacksAroundPlayer))
         {
-            _chunksToRemove.Enqueue(chunkCoordXZ);
+            chunksToRemoveXZ.Add(loadedChunkStack);
+            _chunksToRemove.Enqueue(loadedChunkStack);
         }
         
         LoadChunksAroundPlayer(chunkStacksAroundPlayer);
@@ -171,7 +164,7 @@ public class World : Singleton<World>
         }
     }
 
-    Vector2Int[] GetChunkStacksAroundPlayer(Vector3Int playerChunkCoordinates)
+    Vector2Int[] GetChunkStacksAroundPlayer()
     {
         List<Vector2Int> result = new List<Vector2Int>();
 
@@ -179,11 +172,11 @@ public class World : Singleton<World>
         {
             for (int y = -ChunkLoadRadius; y < ChunkLoadRadius + 1; y++)
             {
-                float squaredDistance = x*x + y*y;
+                //float squaredDistance = x*x + y*y;
 
-                if (squaredDistance <= _squaredChunkLoadRadius)
+                if (IsInViewDistance(new Vector2Int(playerCurrentChunkCoordinates.x + x,playerCurrentChunkCoordinates.z + y)))
                 {
-                    Vector2Int chunkCoordinates = new Vector2Int(playerChunkCoordinates.x + x, playerChunkCoordinates.z + y);
+                    Vector2Int chunkCoordinates = new Vector2Int(playerCurrentChunkCoordinates.x + x, playerCurrentChunkCoordinates.z + y);
 
                     if (chunkCoordinates.x >= 0 && chunkCoordinates.x < TerrainGenerator.WorldSizeInChunks && 
                         chunkCoordinates.y >= 0 && chunkCoordinates.y < TerrainGenerator.WorldSizeInChunks)
@@ -196,6 +189,28 @@ public class World : Singleton<World>
     
         return result.ToArray();
     }
+    bool IsInViewDistance(Vector2Int pos) 
+    {
+        // Calculate the offset from player to the given position
+        int xOffset = pos.x - playerCurrentChunkCoordinates.x;
+        int yOffset = pos.y - playerCurrentChunkCoordinates.z;
+        
+        // Calculate squared distance (same as in GetChunkStacksAroundPlayer)
+        float squaredDistance = xOffset * xOffset + yOffset * yOffset;
+        
+        // Check if the position is within the load radius
+        if (squaredDistance <= _squaredChunkLoadRadius) 
+        {
+            // Check world boundaries
+            if (pos.x >= 0 && pos.x < TerrainGenerator.WorldSizeInChunks && 
+                pos.y >= 0 && pos.y < TerrainGenerator.WorldSizeInChunks) 
+            {
+                return true;
+            }
+        }
+        
+        return false;
+    }
     public void RemoveBlock(Vector3Int blockPos)
     {
         if (GetChunkAtCoord(blockPos.x, blockPos.z, out Chunk targetChunk))
@@ -207,9 +222,9 @@ public class World : Singleton<World>
             targetChunk.Data.SetBlock_Global(blockPos, (byte)BlockType.AIR);
             
             targetChunk.Clear();
-            targetChunk.UpdateNeighbors(blockPos.x - targetChunk.Data.ChunkPosition.x,  blockPos.z - targetChunk.Data.ChunkPosition.y);
             targetChunk.GenerateMeshData();
             targetChunk.Load();
+            targetChunk.UpdateNeighbors(blockPos.x - targetChunk.Data.ChunkPosition.x,  blockPos.z - targetChunk.Data.ChunkPosition.y);
         }
         
     }
@@ -226,9 +241,9 @@ public class World : Singleton<World>
             targetChunk.Data.SetBlock_Global(blockPos, (byte)BlockType.DIRT);
             
             targetChunk.Clear();
-            targetChunk.UpdateNeighbors(blockPos.x - targetChunk.Data.ChunkPosition.x, blockPos.z - targetChunk.Data.ChunkPosition.y);
             targetChunk.GenerateMeshData();
             targetChunk.Load();
+            targetChunk.UpdateNeighbors(blockPos.x - targetChunk.Data.ChunkPosition.x, blockPos.z - targetChunk.Data.ChunkPosition.y);
         }
     }
     public bool GetChunkAtCoord(float x, float z, out Chunk chunk)
@@ -253,9 +268,6 @@ public class World : Singleton<World>
     }
     public byte GetBlock(int x, int y, int z)
     {
-        if (!CheckCoordIsInWorldBorders(x, y, z))
-            return (byte)BlockType.AIR;
-        
         Vector2Int chunkCoords = new Vector2Int(Mathf.FloorToInt(x / Globals.ChunkSize), Mathf.FloorToInt(z / Globals.ChunkSize));
         
         if (_chunks.TryGetValue(chunkCoords, out Chunk chunk))
@@ -272,7 +284,7 @@ public class World : Singleton<World>
     {
         block = (byte)BlockType.AIR;
         if (!CheckCoordIsInWorldBorders(x, y, z))
-            return false;
+            return true;//Return true because empty = air
         
         Vector2Int chunkCoords = new Vector2Int(Mathf.FloorToInt(x / Globals.ChunkSize), Mathf.FloorToInt(z / Globals.ChunkSize));
         
@@ -280,9 +292,12 @@ public class World : Singleton<World>
         {
             int localX = x - (chunkCoords.x * Globals.ChunkSize);
             int localZ = z - (chunkCoords.y * Globals.ChunkSize);
-            
-            block = chunk.Data.GetBlock(localX, y, localZ);
-            return true;
+
+            if (chunk.Data.IsWithinChunk(localX, y, localZ))
+            {
+                block = chunk.Data.GetBlock(localX, y, localZ);
+                return true;
+            }
         }
 
         return false;

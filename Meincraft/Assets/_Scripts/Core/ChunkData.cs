@@ -76,20 +76,7 @@ public class ChunkData
 
     public byte GetBlock(int x, int y, int z)
     {
-        // Check if the coordinates are within this chunk
-        if (x >= 0 && x < Globals.ChunkSize && 
-            y >= 0 && y < Globals.ChunkHeight && 
-            z >= 0 && z < Globals.ChunkSize)
-        {
-            return _blocks[x, y, z];
-        }
-        
-        // If outside this chunk, get block from world
-        return World.Instance.GetBlock(
-            ChunkPosition.x + x,
-            y,
-            ChunkPosition.y + z
-        );
+        return _blocks[x, y, z];
     }
 
     public byte GetBlock(Vector3Int blockPos)
@@ -99,12 +86,7 @@ public class ChunkData
 
     public void SetBlock(int x, int y, int z, byte block)
     {
-        if (x >= 0 && x < Globals.ChunkSize && 
-            y >= 0 && y < Globals.ChunkHeight && 
-            z >= 0 && z < Globals.ChunkSize)
-        {
-            _blocks[x, y, z] = block;
-        }
+        _blocks[x, y, z] = block;
     }
 
     public void SetBlock(Vector3Int blockPos, byte block)
@@ -122,4 +104,6 @@ public class ChunkData
         SetBlock(blockPos.x - ChunkPosition.x, blockPos.y, blockPos.z - ChunkPosition.y, block);
     }
     #endregion
+    
+    
 }
