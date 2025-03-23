@@ -151,6 +151,33 @@ public class World : Singleton<World>
             if(_activeChunks.Contains(chunkXZ)) continue;//Chunk is already loaded
             _chunksToLoad.Enqueue(chunkXZ);
         }
+        SetupChunkNeighbors();
+    }
+
+    void SetupChunkNeighbors()
+    {
+        for (int i = 0; i < _chunks.Count; i++)
+        {
+            var chunkPos = _chunks.Keys.ElementAt(i);
+            foreach (var dir in Globals.Directions_2D)
+            {
+                var nChunkPos = chunkPos + dir.Value;
+                if (_chunks.TryGetValue(nChunkPos, out Chunk nChunk))
+                {
+                    _chunks[chunkPos].SetNeighbor(dir.Key, nChunk);
+                    nChunk.SetNeighbor(Globals.InvertDirection(dir.Key), _chunks[chunkPos]);
+                }
+
+                else if(IsInViewDistance(chunkPos))//For avoid infinite loop: At the border of the view distance, neighboring chunks may be out of range. Attempting to set their neighbors could lead to an infinite loop.
+                {
+                    Chunk newChunk = CreateChunk(nChunkPos);
+                    _chunks.TryAdd(chunkPos, newChunk);
+
+                    _chunks[chunkPos].SetNeighbor(dir.Key, newChunk);
+                    newChunk.SetNeighbor(Globals.InvertDirection(dir.Key), _chunks[chunkPos]);
+                }
+            }
+        }
     }
 
     Chunk CreateChunk(Vector2Int chunkCoordinates)
@@ -166,8 +193,7 @@ public class World : Singleton<World>
     Vector2Int[] GetChunkStacksAroundPlayer()
     {
         List<Vector2Int> result = new List<Vector2Int>();
-    
-
+        
         for (int x = -ChunkLoadRadius; x <= ChunkLoadRadius; x++)
         {
             for (int y = -ChunkLoadRadius; y <= ChunkLoadRadius; y++)

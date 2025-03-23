@@ -27,12 +27,12 @@ public class Globals
         LEFT = 4,
         RIGHT = 5
     }
-    public static readonly Vector3Int[] Directions_2D = new Vector3Int[]
+    public static readonly Dictionary<Direction ,Vector2Int> Directions_2D = new Dictionary<Direction ,Vector2Int>
     {
-        Vector3Int.forward,
-        Vector3Int.back,
-        Vector3Int.left,
-        Vector3Int.right
+        {Direction.FRONT, Vector2Int.up},
+        {Direction.BACK, Vector2Int.down},
+        {Direction.LEFT, Vector2Int.left},
+        {Direction.RIGHT, Vector2Int.right},
     };
     public static readonly Vector3Int[] Directions_3D = new Vector3Int[]
     {
@@ -43,4 +43,25 @@ public class Globals
         Vector3Int.left,
         Vector3Int.right
     };
+
+    public static Direction InvertDirection(Direction dir)
+    {
+        switch (dir)
+        {
+            case Direction.UP:
+                return Direction.DOWN;
+            case Direction.DOWN:
+                return Direction.UP;
+            case Direction.FRONT:
+                return Direction.BACK;
+            case Direction.BACK:
+                return Direction.FRONT;
+            case Direction.LEFT:
+                return Direction.RIGHT;
+            case Direction.RIGHT:
+                return Direction.LEFT;
+            default:
+                return dir;
+        }
+    }
 }
