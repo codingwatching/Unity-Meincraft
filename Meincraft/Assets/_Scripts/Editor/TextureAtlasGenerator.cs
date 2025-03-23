@@ -33,7 +33,7 @@ public class TextureAtlasGenerator : EditorWindow
         
         if (GUILayout.Button("Generate"))
         {
-            string path = EditorUtility.SaveFilePanel("Select Output Directory", "Assets/", "Atlas", ".png");
+            string path = EditorUtility.SaveFilePanel("Select Output Directory", "Assets/", "Atlas", "png");
             if (string.IsNullOrEmpty(path)) return;
             GenerateAtlas(path);
             Close();

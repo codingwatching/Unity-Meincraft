@@ -61,9 +61,7 @@ Shader "Meincraft/Block Shader"
 
             fixed4 frag (v2f i) : SV_Target
             {
-                int arrayIndex = int(i.uv.z);
-                
-                fixed4 texCol = UNITY_SAMPLE_TEX2DARRAY(_MainTex, float3(i.uv.xy, arrayIndex));
+                fixed4 texCol = UNITY_SAMPLE_TEX2DARRAY(_MainTex, i.uv.xyz);
                 fixed4 color = texCol;
                 float3 posDiff = i.worldPos - _TargetBlockPosition;
                 

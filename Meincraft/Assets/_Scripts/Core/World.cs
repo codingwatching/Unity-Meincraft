@@ -1,18 +1,13 @@
 using System;
-using System.Collections;
 using System.Collections.Generic;
-using System.Diagnostics;
 using UnityEngine;
 using System.Linq;
 using Random = UnityEngine.Random;
-using Unity.Mathematics;
-using UnityEngine.Profiling;
-using Debug = UnityEngine.Debug;
 
 public class World : Singleton<World>
 {
-    public TerrainGenerator TerrainGenerator;
-    public BlockTextureLibrary BlockTextures;
+    [SerializeField] TerrainGenerator terrainGenerator;
+    [SerializeField] BlockLibrary blockLibrary;
     [SerializeField] Player player;
     [SerializeField] private bool SpawnPlayerAtWorldCenter = false;
     
@@ -47,10 +42,10 @@ public class World : Singleton<World>
         chunkPool.InitializePool((int)_squaredChunkLoadRadius);
         
         //Precompute frequently used values for avoid repeated calculations
-        _worldWidthBlockCount = TerrainGenerator.WorldSizeInChunks * Globals.ChunkSize;
+        _worldWidthBlockCount = terrainGenerator.WorldSizeInChunks * Globals.ChunkSize;
         _chunkCenter = Globals.ChunkSize / 2;
         
-        TerrainGenerator.Initialize();
+        terrainGenerator.Initialize();
         
         int xPos, zPos;
         if (SpawnPlayerAtWorldCenter)
@@ -61,8 +56,8 @@ public class World : Singleton<World>
         else
         {
             //Get random position in random chunk
-            int randomChunkX = Random.Range(0, TerrainGenerator.WorldSizeInChunks / 2);
-            int randomChunkZ = Random.Range(0, TerrainGenerator.WorldSizeInChunks / 2);
+            int randomChunkX = Random.Range(0, terrainGenerator.WorldSizeInChunks / 2);
+            int randomChunkZ = Random.Range(0, terrainGenerator.WorldSizeInChunks / 2);
             xPos = (randomChunkX * Globals.ChunkSize) + _chunkCenter;
             zPos = (randomChunkZ * Globals.ChunkSize) + _chunkCenter;
         }
@@ -148,45 +143,44 @@ public class World : Singleton<World>
         for (int i = 0; i < chunksAroundPlayerXZ.Length; i++)
         {
             Vector2Int chunkXZ = new Vector2Int(chunksAroundPlayerXZ[i].x, chunksAroundPlayerXZ[i].y);
-            if(_activeChunks.Contains(chunkXZ)) continue;//Chunk is already loaded
-            
             if(!_chunks.ContainsKey(chunkXZ))
             {
-                ChunkPosition chunkPosition = new ChunkPosition(chunkXZ);
-                ChunkData chunkData = new ChunkData(TerrainGenerator.GetBlocks(chunkXZ), chunkXZ * Globals.ChunkSize);
-                GameObject chunkObject = chunkPool.GetObjectFromPool();
-                chunkObject.transform.SetPositionAndRotation(chunkPosition.ToVector3Int() * Globals.ChunkSize, Quaternion.identity);
-                
-                Chunk newChunk = new Chunk(chunkData ,chunkObject, BlockTextures);
-                _chunks.Add(chunkPosition.Position ,newChunk);
+                _chunks.Add(chunkXZ ,CreateChunk(chunkXZ));
             }
+            
+            if(_activeChunks.Contains(chunkXZ)) continue;//Chunk is already loaded
             _chunksToLoad.Enqueue(chunkXZ);
         }
+    }
+
+    Chunk CreateChunk(Vector2Int chunkCoordinates)
+    {
+        ChunkPosition chunkPosition = new ChunkPosition(chunkCoordinates);
+        ChunkData chunkData = new ChunkData(terrainGenerator.GetBlocks(chunkCoordinates), chunkCoordinates * Globals.ChunkSize);
+        GameObject chunkObject = chunkPool.GetObjectFromPool();
+        chunkObject.transform.SetPositionAndRotation(chunkPosition.ToVector3Int() * Globals.ChunkSize, Quaternion.identity);
+                
+        return new Chunk(chunkData ,chunkObject, blockLibrary);
     }
 
     Vector2Int[] GetChunkStacksAroundPlayer()
     {
         List<Vector2Int> result = new List<Vector2Int>();
+    
 
-        for (int x = -ChunkLoadRadius; x < ChunkLoadRadius + 1; x++)
+        for (int x = -ChunkLoadRadius; x <= ChunkLoadRadius; x++)
         {
-            for (int y = -ChunkLoadRadius; y < ChunkLoadRadius + 1; y++)
+            for (int y = -ChunkLoadRadius; y <= ChunkLoadRadius; y++)
             {
-                //float squaredDistance = x*x + y*y;
-
-                if (IsInViewDistance(new Vector2Int(playerCurrentChunkCoordinates.x + x,playerCurrentChunkCoordinates.z + y)))
+                Vector2Int chunkCoordinates = new Vector2Int(playerCurrentChunkCoordinates.x + x, playerCurrentChunkCoordinates.z + y);
+            
+                if (IsInViewDistance(chunkCoordinates))
                 {
-                    Vector2Int chunkCoordinates = new Vector2Int(playerCurrentChunkCoordinates.x + x, playerCurrentChunkCoordinates.z + y);
-
-                    if (chunkCoordinates.x >= 0 && chunkCoordinates.x < TerrainGenerator.WorldSizeInChunks && 
-                        chunkCoordinates.y >= 0 && chunkCoordinates.y < TerrainGenerator.WorldSizeInChunks)
-                    {
-                        result.Add(chunkCoordinates);
-                    }
+                    result.Add(chunkCoordinates);
                 }
             }
         }
-    
+
         return result.ToArray();
     }
     bool IsInViewDistance(Vector2Int pos) 
@@ -202,8 +196,8 @@ public class World : Singleton<World>
         if (squaredDistance <= _squaredChunkLoadRadius) 
         {
             // Check world boundaries
-            if (pos.x >= 0 && pos.x < TerrainGenerator.WorldSizeInChunks && 
-                pos.y >= 0 && pos.y < TerrainGenerator.WorldSizeInChunks) 
+            if (pos.x >= 0 && pos.x < terrainGenerator.WorldSizeInChunks && 
+                pos.y >= 0 && pos.y < terrainGenerator.WorldSizeInChunks) 
             {
                 return true;
             }
@@ -308,7 +302,7 @@ public class World : Singleton<World>
     }
     public int GetSurfaceHeight(int x, int z)
     {
-        return Mathf.FloorToInt(TerrainGenerator.GetHeight(x, z)) + 1;
+        return Mathf.FloorToInt(terrainGenerator.GetHeight(x, z)) + 1;
     }
 
     public Bounds GetBlockBounds(int x, int y, int z)

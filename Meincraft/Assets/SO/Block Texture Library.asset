@@ -12,8 +12,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 472d0f5aa8d21e3498d6be75a12175c8, type: 3}
   m_Name: Block Texture Library
   m_EditorClassIdentifier: 
-  Data:
-  - BlockType: 0
+  data:
+  - Type: 0
     IsSolid: 0
     TopFace: 0
     BottomFace: 0
@@ -21,7 +21,7 @@ MonoBehaviour:
     LeftFace: 0
     FrontFace: 0
     BackFace: 0
-  - BlockType: 1
+  - Type: 1
     IsSolid: 1
     TopFace: 3
     BottomFace: 1
@@ -29,7 +29,7 @@ MonoBehaviour:
     LeftFace: 2
     FrontFace: 2
     BackFace: 2
-  - BlockType: 2
+  - Type: 2
     IsSolid: 1
     TopFace: 1
     BottomFace: 1
@@ -37,7 +37,7 @@ MonoBehaviour:
     LeftFace: 1
     FrontFace: 1
     BackFace: 1
-  - BlockType: 3
+  - Type: 3
     IsSolid: 1
     TopFace: 4
     BottomFace: 4
@@ -45,7 +45,7 @@ MonoBehaviour:
     LeftFace: 4
     FrontFace: 4
     BackFace: 4
-  - BlockType: 4
+  - Type: 4
     IsSolid: 1
     TopFace: 0
     BottomFace: 0
@@ -53,3 +53,11 @@ MonoBehaviour:
     LeftFace: 0
     FrontFace: 0
     BackFace: 0
+  - Type: 5
+    IsSolid: 0
+    TopFace: 5
+    BottomFace: 5
+    RightFace: 5
+    LeftFace: 5
+    FrontFace: 5
+    BackFace: 5

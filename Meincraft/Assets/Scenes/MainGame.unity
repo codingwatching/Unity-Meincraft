@@ -1005,8 +1005,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2a877c3140c490443b195ad7e3a81522, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  TerrainGenerator: {fileID: 11400000, guid: a336a54f9f8fd0c478c50c857ab35433, type: 2}
-  BlockTextures: {fileID: 11400000, guid: c80258e81976c304ebf2598e293df8c0, type: 2}
+  terrainGenerator: {fileID: 11400000, guid: a336a54f9f8fd0c478c50c857ab35433, type: 2}
+  blockLibrary: {fileID: 11400000, guid: c80258e81976c304ebf2598e293df8c0, type: 2}
   player: {fileID: 2063546770}
   SpawnPlayerAtWorldCenter: 1
   chunkPool: {fileID: 1468448160}
