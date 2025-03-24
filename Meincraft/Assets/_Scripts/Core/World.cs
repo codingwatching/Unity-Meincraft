@@ -102,6 +102,7 @@ public class World : Singleton<World>
                 if (_chunks.TryGetValue(chunkToRemove, out Chunk c))
                 {
                     c.UnLoad();
+                    _chunks.Remove(chunkToRemove);
                 }
                 _activeChunks.Remove(chunkToRemove);
             }
