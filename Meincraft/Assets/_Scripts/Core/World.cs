@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using System.Linq;
+using UnityEngine.Profiling;
 using Random = UnityEngine.Random;
 
 public class World : Singleton<World>
@@ -14,7 +15,7 @@ public class World : Singleton<World>
     [Space(10)]
     [SerializeField] private ChunkPooling chunkPool;
     
-    Vector3Int playerCurrentChunkCoordinates;
+    Vector2Int playerCurrentChunkCoordinates;
 
     [Space(10)] public int ChunkLoadRadius = 6;
     [SerializeField] private int chunkLoadPerFrame = 4;
@@ -70,7 +71,7 @@ public class World : Singleton<World>
     }
     private void Update()
     {
-        Vector3Int playerChunkCoordinates = GetPlayerChunkCoordinates();
+        Vector2Int playerChunkCoordinates = GetPlayerChunkCoordinates();
         if (playerCurrentChunkCoordinates != playerChunkCoordinates)
         {
             playerCurrentChunkCoordinates = playerChunkCoordinates;
@@ -84,10 +85,12 @@ public class World : Singleton<World>
             {
                 if (_chunks.TryGetValue(chunkToLoad, out Chunk chunk))
                 {
+                    Profiler.BeginSample("Chunk load");
                     chunk.Clear();
                     chunk.GenerateMeshData();
                     chunk.Load();
                     _activeChunks.Add(chunkToLoad);
+                    Profiler.EndSample();
                 }
             }
 
@@ -132,7 +135,7 @@ public class World : Singleton<World>
     void LoadChunksAroundPlayer(Vector2Int[] chunksAroundPlayerXZ)
     {
         _chunksToLoad.Clear();//Cleaning the queue for avoid repetitions
-        Vector2Int playerChunkStack = new Vector2Int(playerCurrentChunkCoordinates.x, playerCurrentChunkCoordinates.z);
+        Vector2Int playerChunkStack = new Vector2Int(playerCurrentChunkCoordinates.x, playerCurrentChunkCoordinates.y);
     
         //Sort chunk stacks by distance from player to load chunk stacks close to player firstly  
         Array.Sort(chunksAroundPlayerXZ, (a, b) => {
@@ -199,7 +202,7 @@ public class World : Singleton<World>
         {
             for (int y = -ChunkLoadRadius; y <= ChunkLoadRadius; y++)
             {
-                Vector2Int chunkCoordinates = new Vector2Int(playerCurrentChunkCoordinates.x + x, playerCurrentChunkCoordinates.z + y);
+                Vector2Int chunkCoordinates = new Vector2Int(playerCurrentChunkCoordinates.x + x, playerCurrentChunkCoordinates.y + y);
             
                 if (IsInViewDistance(chunkCoordinates))
                 {
@@ -214,7 +217,7 @@ public class World : Singleton<World>
     {
         // Calculate the offset from player to the given position
         int xOffset = pos.x - playerCurrentChunkCoordinates.x;
-        int yOffset = pos.y - playerCurrentChunkCoordinates.z;
+        int yOffset = pos.y - playerCurrentChunkCoordinates.y;
         
         // Calculate squared distance (same as in GetChunkStacksAroundPlayer)
         float squaredDistance = xOffset * xOffset + yOffset * yOffset;
@@ -236,7 +239,7 @@ public class World : Singleton<World>
     {
         if (GetChunkAtCoord(blockPos.x, blockPos.z, out Chunk targetChunk))
         {
-            if (targetChunk.Data.GetBlock_GlobalPos(blockPos.x, blockPos.y, blockPos.z) == (byte)BlockType.BEDROCK)//Temporary
+            if (targetChunk.Data.GetBlock_GlobalPos(blockPos) == (byte)BlockType.BEDROCK)//Temporary
             {
                 return;
             }
@@ -249,7 +252,7 @@ public class World : Singleton<World>
         }
         
     }
-    public void AddBlock(Vector3Int blockPos)
+    public void PlaceBlock(Vector3Int blockPos)
     {
         if (player.CheckIntersects(blockPos))
         {
@@ -280,11 +283,10 @@ public class World : Singleton<World>
         return false;
     }
 
-    public Vector3Int GetPlayerChunkCoordinates()
+    public Vector2Int GetPlayerChunkCoordinates()
     {
-        return new Vector3Int(
+        return new Vector2Int(
             Mathf.FloorToInt(player.transform.position.x / Globals.ChunkSize),
-            Mathf.FloorToInt(player.transform.position.y / Globals.ChunkSize),
             Mathf.FloorToInt(player.transform.position.z / Globals.ChunkSize));
     }
     public byte GetBlock(int x, int y, int z)

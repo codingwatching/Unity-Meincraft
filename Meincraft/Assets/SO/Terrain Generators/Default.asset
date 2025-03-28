@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Default
   m_EditorClassIdentifier: 
   BaseHeight: 64
-  WaterHeight: 50
+  WaterHeight: 80
   WorldSizeInChunks: 128
   Seed: 1337
   NoiseDatas:
@@ -24,7 +24,7 @@ MonoBehaviour:
   - NoiseType: 5
     Frequency: 0.1
     Amplitude: 2.31
-    Exponential: 0
+    Exponential: 1
   - NoiseType: 3
     Frequency: 0.38
     Amplitude: 0.82

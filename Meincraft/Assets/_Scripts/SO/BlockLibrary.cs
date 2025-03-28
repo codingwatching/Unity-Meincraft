@@ -47,4 +47,25 @@ public class BlockData
     public byte LeftFace;
     public byte FrontFace;
     public byte BackFace;
+
+    public byte GetTextureSliceIndex(Globals.Direction dir)
+    {
+        switch (dir)
+        {
+            case Globals.Direction.UP:
+                return TopFace;
+            case Globals.Direction.DOWN:
+                return BottomFace;
+            case Globals.Direction.FRONT:
+                return FrontFace;
+            case Globals.Direction.BACK:
+                return BackFace;
+            case Globals.Direction.LEFT:
+                return LeftFace;
+            case Globals.Direction.RIGHT:
+                return RightFace;
+            default:
+                return 0;
+        }
+    }
 }

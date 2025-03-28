@@ -18,6 +18,7 @@ public class Globals
     public static readonly int PlayerHeight = 2;
 
 
+    [Flags]
     public enum Direction
     {
         UP = 0,
@@ -34,14 +35,14 @@ public class Globals
         {Direction.LEFT, Vector2Int.left},
         {Direction.RIGHT, Vector2Int.right},
     };
-    public static readonly Vector3Int[] Directions_3D = new Vector3Int[]
+    public static readonly Dictionary<Direction ,Vector3Int> Directions_3D = new Dictionary<Direction ,Vector3Int>
     {
-        Vector3Int.up ,
-        Vector3Int.down ,
-        Vector3Int.forward,
-        Vector3Int.back,
-        Vector3Int.left,
-        Vector3Int.right
+        {Direction.UP, Vector3Int.up},
+        {Direction.DOWN, Vector3Int.down},
+        {Direction.FRONT, Vector3Int.forward},
+        {Direction.BACK, Vector3Int.back},
+        {Direction.LEFT, Vector3Int.left},
+        {Direction.RIGHT, Vector3Int.right}
     };
 
     public static Direction InvertDirection(Direction dir)

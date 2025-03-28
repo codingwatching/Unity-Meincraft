@@ -103,7 +103,7 @@ public class Player : MonoBehaviour
                 if (Physics.Raycast(pCam.position, pCam.forward, out RaycastHit hit, 5, LayerMask.GetMask("World")))
                 {
                     Vector3Int blockPos = Vector3Int.FloorToInt(hit.point + hit.normal * 0.5f);
-                    World.Instance.AddBlock(blockPos);
+                    World.Instance.PlaceBlock(blockPos);
                 }
                 break;
             case InputActionPhase.Performed:
