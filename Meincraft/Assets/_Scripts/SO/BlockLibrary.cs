@@ -4,7 +4,7 @@ using System.Linq;
 using UnityEngine;
 using UnityEngine.Serialization;
 
-[CreateAssetMenu(menuName ="Block Texture Library", fileName ="Block Texture Library")]
+[CreateAssetMenu(menuName ="Block Library", fileName ="Block Library")]
 public class BlockLibrary : ScriptableObject
 {
     [SerializeField] BlockData[] data;
@@ -40,6 +40,9 @@ public class BlockData
     public BlockType Type;
     public bool IsSolid = true;
 
+    [Space(10),Header("Mesh Data")]
+    public BlockMeshData MeshData;
+    
     [Space(10), Header("Textures")]
     public byte TopFace;
     public byte BottomFace;
@@ -47,7 +50,6 @@ public class BlockData
     public byte LeftFace;
     public byte FrontFace;
     public byte BackFace;
-
     public byte GetTextureSliceIndex(Globals.Direction dir)
     {
         switch (dir)
@@ -68,4 +70,5 @@ public class BlockData
                 return 0;
         }
     }
+
 }

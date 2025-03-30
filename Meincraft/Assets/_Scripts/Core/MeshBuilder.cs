@@ -1,15 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using Unity.VisualScripting;
 using UnityEngine;
-
-public struct MeshBuilderSettings
-{
-    public int MaxVertices;
-    public int MaxTriangles;
-    public bool UseTransparency;
-    public Color DefaultColor;
-}
 
 public class MeshBuilder
 {
@@ -23,25 +16,13 @@ public class MeshBuilder
     private int _triangleCount;
     private int _uvCount;
     
-    private readonly Dictionary<Globals.Direction, Action<int,int,int,int>> _directionActions;
-    
-    public MeshBuilder(MeshBuilderSettings settings)
+    public MeshBuilder()
     {
         _vertices = new List<Vector3>();
         _triangles = new List<int>();
         _normals = new List<Vector3>();
         _colors = new List<Color>();
         _uvs = new List<Vector3>();
-     
-        _directionActions = new Dictionary<Globals.Direction, Action<int,int,int,int>>
-        {
-            { Globals.Direction.FRONT, FrontFace },
-            { Globals.Direction.UP, TopFace },
-            { Globals.Direction.RIGHT, RightFace },
-            { Globals.Direction.BACK, BackFace },
-            { Globals.Direction.DOWN, BottomFace },
-            { Globals.Direction.LEFT, LeftFace }
-        };     
     }
 
     public Mesh Build()
@@ -68,132 +49,17 @@ public class MeshBuilder
         return mesh;
     }
 
-    public void AddFace(Globals.Direction dir, Vector3Int position, int textureSliceIndex)
+    public void AddFace(BlockFaceData faceData, Globals.Direction dir, Vector3Int position, int textureSliceIndex)
     {
-        _directionActions[dir].Invoke(position.x, position.y, position.z, textureSliceIndex);
+        for (int i = 0; i < faceData.Vertices.Length; i++)
+        {
+            _vertices.Add(position + faceData.Vertices[i]);
+            _normals.Add(Globals.Directions_3D[dir]);
+            _colors.Add(faceData.Colors[i]);
+        }
+        AddQuadTriangles();
+        AddUV(textureSliceIndex);
     } 
-    
-    void BackFace(int x, int y, int z, int textureSliceIndex)
-    {
-            
-        _vertices.Add(new Vector3(x + 1, y, z));
-        _vertices.Add(new Vector3(x, y, z));
-        _vertices.Add(new Vector3(x, y + 1, z));
-        _vertices.Add(new Vector3(x + 1, y + 1, z));
-
-        _normals.Add(Vector3.back);
-        _normals.Add(Vector3.back);
-        _normals.Add(Vector3.back);
-        _normals.Add(Vector3.back);
-        
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        
-        AddQuadTriangles();
-        AddUV(textureSliceIndex);
-    }
-    void FrontFace(int x, int y, int z, int textureSliceIndex)
-    {
-        _vertices.Add(new Vector3(x, y, z + 1));
-        _vertices.Add(new Vector3(x + 1, y, z + 1));
-        _vertices.Add(new Vector3(x + 1, y + 1, z + 1));
-        _vertices.Add(new Vector3(x, y + 1, z + 1));
-        
-        _normals.Add(Vector3.forward);
-        _normals.Add(Vector3.forward);
-        _normals.Add(Vector3.forward);
-        _normals.Add(Vector3.forward);
-        
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        
-        AddQuadTriangles();
-        AddUV(textureSliceIndex);
-    }
-    void TopFace(int x, int y, int z, int textureSliceIndex)
-    {
-        _vertices.Add(new Vector3(x, y + 1, z));
-        _vertices.Add(new Vector3(x, y + 1, z + 1));
-        _vertices.Add(new Vector3(x + 1, y + 1, z + 1));
-        _vertices.Add(new Vector3(x + 1, y + 1, z));
-
-        _normals.Add(Vector3.up);
-        _normals.Add(Vector3.up);
-        _normals.Add(Vector3.up);
-        _normals.Add(Vector3.up);
-        
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        
-        AddQuadTriangles();
-        AddUV(textureSliceIndex);
-    }
-    void BottomFace(int x, int y, int z, int textureSliceIndex)
-    {
-        _vertices.Add(new Vector3(x, y, z));
-        _vertices.Add(new Vector3(x + 1, y, z));
-        _vertices.Add(new Vector3(x + 1, y, z + 1));
-        _vertices.Add(new Vector3(x, y, z + 1));
-
-        _normals.Add(Vector3.down);
-        _normals.Add(Vector3.down);
-        _normals.Add(Vector3.down);
-        _normals.Add(Vector3.down);
-        
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        
-        AddQuadTriangles();
-        AddUV(textureSliceIndex);
-    }
-    void LeftFace(int x, int y, int z, int textureSliceIndex)
-    {
-        _vertices.Add(new Vector3(x, y, z));
-        _vertices.Add(new Vector3(x, y, z + 1));
-        _vertices.Add(new Vector3(x, y + 1, z + 1));
-        _vertices.Add(new Vector3(x, y + 1, z));
-
-        _normals.Add(Vector3.left);
-        _normals.Add(Vector3.left);
-        _normals.Add(Vector3.left);
-        _normals.Add(Vector3.left);
-        
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        
-        AddQuadTriangles();
-        AddUV(textureSliceIndex);
-    }
-    void RightFace(int x, int y, int z, int textureSliceIndex)
-    {
-        _vertices.Add(new Vector3(x + 1, y, z + 1));
-        _vertices.Add(new Vector3(x + 1, y, z));
-        _vertices.Add(new Vector3(x + 1, y + 1, z));
-        _vertices.Add(new Vector3(x + 1, y + 1, z + 1));
-
-        _normals.Add(Vector3.right);
-        _normals.Add(Vector3.right);
-        _normals.Add(Vector3.right);
-        _normals.Add(Vector3.right);
-        
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        _colors.Add(Color.white);
-        
-        AddQuadTriangles();
-        AddUV(textureSliceIndex);
-    }
     public void AddQuadTriangles()
     {
         int vertCount = _vertices.Count;

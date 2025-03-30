@@ -13,8 +13,9 @@ MonoBehaviour:
   m_Name: Block Texture Library
   m_EditorClassIdentifier: 
   data:
-  - Type: 0
+  - Type: 255
     IsSolid: 0
+    MeshData: {fileID: 0}
     TopFace: 0
     BottomFace: 0
     RightFace: 0
@@ -23,6 +24,7 @@ MonoBehaviour:
     BackFace: 0
   - Type: 1
     IsSolid: 1
+    MeshData: {fileID: 11400000, guid: c4e55963980fdc341af2a6736ed7fcdd, type: 2}
     TopFace: 3
     BottomFace: 1
     RightFace: 2
@@ -31,6 +33,7 @@ MonoBehaviour:
     BackFace: 2
   - Type: 2
     IsSolid: 1
+    MeshData: {fileID: 11400000, guid: c4e55963980fdc341af2a6736ed7fcdd, type: 2}
     TopFace: 1
     BottomFace: 1
     RightFace: 1
@@ -39,6 +42,7 @@ MonoBehaviour:
     BackFace: 1
   - Type: 3
     IsSolid: 1
+    MeshData: {fileID: 11400000, guid: c4e55963980fdc341af2a6736ed7fcdd, type: 2}
     TopFace: 4
     BottomFace: 4
     RightFace: 4
@@ -47,6 +51,7 @@ MonoBehaviour:
     BackFace: 4
   - Type: 4
     IsSolid: 1
+    MeshData: {fileID: 11400000, guid: c4e55963980fdc341af2a6736ed7fcdd, type: 2}
     TopFace: 0
     BottomFace: 0
     RightFace: 0
@@ -55,6 +60,7 @@ MonoBehaviour:
     BackFace: 0
   - Type: 5
     IsSolid: 0
+    MeshData: {fileID: 11400000, guid: 0985d8836f2bc634993a8ca6c8a06042, type: 2}
     TopFace: 5
     BottomFace: 5
     RightFace: 5
