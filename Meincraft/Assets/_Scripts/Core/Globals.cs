@@ -9,6 +9,8 @@ public enum BlockType : byte
     STONE = 3,
     BEDROCK = 4,
     WATER = 5,
+    OAK_LOG = 6,
+    OAK_LEAVES = 7,
     AIR = 255
 }
 public class Globals

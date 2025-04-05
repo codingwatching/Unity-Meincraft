@@ -27,7 +27,7 @@ Shader "Meincraft/Block Shader"
             {
                 float4 vertex : POSITION;
                 float3 uv : TEXCOORD0;
-                float4 color : COLOR;
+                float4 color : COLOR0;
             };
 
             struct v2f
@@ -35,7 +35,7 @@ Shader "Meincraft/Block Shader"
                 float3 uv : TEXCOORD0;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
-                float4 color : COLOR;
+                float4 color : COLOR0;
                 float3 worldPos : TEXCOORD2;
             };
 
@@ -62,7 +62,7 @@ Shader "Meincraft/Block Shader"
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 texCol = UNITY_SAMPLE_TEX2DARRAY(_MainTex, i.uv.xyz);
-                fixed4 color = texCol;
+                fixed4 color = texCol * i.color;
                 float3 posDiff = i.worldPos - _TargetBlockPosition;
                 
                 float3 isInsideBlock = step(0, posDiff) * step(posDiff, 1);

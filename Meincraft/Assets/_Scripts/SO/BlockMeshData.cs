@@ -36,5 +36,4 @@ public class BlockMeshData : ScriptableObject
 public class BlockFaceData
 {
     public Vector3[] Vertices;
-    public Color[] Colors;
 }

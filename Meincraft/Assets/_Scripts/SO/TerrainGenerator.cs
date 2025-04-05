@@ -96,6 +96,11 @@ public class TerrainGenerator : ScriptableObject
                     else if (y == intHeight - 1)
                     {
                         result[x, y, z] = (byte)BlockType.GRASS;
+
+                        if (x > 2 && z > 2 && x < Globals.ChunkSize - 2 && z < Globals.ChunkSize - 2)
+                        {
+                            
+                        }
                     }
                     // Stone for everything else
                     else

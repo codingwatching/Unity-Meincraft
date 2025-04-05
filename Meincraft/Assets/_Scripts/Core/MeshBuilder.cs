@@ -49,13 +49,13 @@ public class MeshBuilder
         return mesh;
     }
 
-    public void AddFace(BlockFaceData faceData, Globals.Direction dir, Vector3Int position, int textureSliceIndex)
+    public void AddFace(BlockFaceData faceData, Globals.Direction dir, Vector3Int position, int textureSliceIndex, Color color)
     {
         for (int i = 0; i < faceData.Vertices.Length; i++)
         {
             _vertices.Add(position + faceData.Vertices[i]);
             _normals.Add(Globals.Directions_3D[dir]);
-            _colors.Add(faceData.Colors[i]);
+            _colors.Add(color);
         }
         AddQuadTriangles();
         AddUV(textureSliceIndex);
