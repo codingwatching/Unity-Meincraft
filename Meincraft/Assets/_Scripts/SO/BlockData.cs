@@ -34,13 +34,13 @@ public class BlockData : ScriptableObject
     public Color DefaultColor = Color.white;
     
     [Space(10), Header("Textures")]
-    public byte TopFace;
-    public byte BottomFace;
-    public byte RightFace;
-    public byte LeftFace;
-    public byte FrontFace;
-    public byte BackFace;
-    public byte GetTextureSliceIndex(Globals.Direction dir)
+    public int TopFace;
+    public int BottomFace;
+    public int RightFace;
+    public int LeftFace;
+    public int FrontFace;
+    public int BackFace;
+    public int GetTextureSliceIndex(Globals.Direction dir)
     {
         switch (dir)
         {

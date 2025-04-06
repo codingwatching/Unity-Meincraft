@@ -13,9 +13,10 @@ MonoBehaviour:
   m_Name: Block Library
   m_EditorClassIdentifier: 
   data:
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
-  - {fileID: 0}
+  - {fileID: 11400000, guid: a2f56185254acc94fb5ddf54a891a2b7, type: 2}
+  - {fileID: 11400000, guid: fdf7fe069e9be4b11b698d055d12c5da, type: 2}
+  - {fileID: 11400000, guid: 6ea700d3190124bd488ce20681bf6e47, type: 2}
+  - {fileID: 11400000, guid: 201dba35ffe434ca0b0d5ae059f6393f, type: 2}
+  - {fileID: 11400000, guid: 2228603cc8b8549ed93aa7c1b68be645, type: 2}
+  - {fileID: 11400000, guid: 9fa7cffd0fb4a40ad97d18bd4e8902d5, type: 2}
+  - {fileID: 11400000, guid: c58b384407a4e4746b9867e032b2c955, type: 2}

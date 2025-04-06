@@ -10,15 +10,15 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: e89e77b07bda44c88f715bb07457cc6e, type: 3}
-  m_Name: Grass
+  m_Name: Oak_Leaves
   m_EditorClassIdentifier: 
-  Type: 1
+  Type: 7
   IsSolid: 0
   MeshData: {fileID: 11400000, guid: c4e55963980fdc341af2a6736ed7fcdd, type: 2}
-  DefaultColor: {r: 1, g: 1, b: 1, a: 1}
-  TopFace: 3
-  BottomFace: 1
-  RightFace: 2
-  LeftFace: 2
-  FrontFace: 2
-  BackFace: 2
+  DefaultColor: {r: 0.08627451, g: 0.64705884, b: 0, a: 1}
+  TopFace: 4
+  BottomFace: 4
+  RightFace: 4
+  LeftFace: 4
+  FrontFace: 4
+  BackFace: 4

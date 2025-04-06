@@ -9,5 +9,6 @@ public class BlockLibrary : ScriptableObject
 {
     [SerializeField] BlockData[] data;
 
-    public BlockData this[byte idx] => data[idx];
+    public BlockData this[BlockType t] => data.FirstOrDefault(x => x.Type == t);
+    public BlockData this[byte idx] => this[(BlockType)idx];
 }

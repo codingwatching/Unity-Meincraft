@@ -26,7 +26,7 @@ Shader "Meincraft/Water Shader"
             {
                 float4 vertex : POSITION;
                 float3 uv : TEXCOORD0;
-                float4 color : COLOR;
+                float4 color : COLOR0;
             };
 
             struct v2f
@@ -34,7 +34,7 @@ Shader "Meincraft/Water Shader"
                 float3 uv : TEXCOORD0;
                 UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
-                float4 color : COLOR;
+                float4 color : COLOR0;
             };
 
             UNITY_DECLARE_TEX2DARRAY(_MainTex);
@@ -55,6 +55,7 @@ Shader "Meincraft/Water Shader"
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 color = UNITY_SAMPLE_TEX2DARRAY(_MainTex, i.uv.xyz);
+                color *= i.color;
                 UNITY_APPLY_FOG(i.fogCoord, color);
                 color.a = _Alpha;
                 return color;

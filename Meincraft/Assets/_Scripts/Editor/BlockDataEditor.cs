@@ -7,8 +7,14 @@ public class BlockDataEditor : Editor
 {
     private PreviewRenderUtility previewRenderer;
     private Material previewMaterial;
+    private BlockMeshData previewMeshData;
+    Texture2DArray blockAtlas;
     private bool isInitialized;
+    private float rotationAmount;
     
+    private SerializedProperty typeProperty;
+    private SerializedProperty meshDataObject;
+    private SerializedProperty defaultColor;
     void InitializePreviewRenderer()
     {
         if (isInitialized) return;
@@ -21,33 +27,59 @@ public class BlockDataEditor : Editor
         previewRenderer.camera.transform.LookAt(Vector3.zero, Vector3.up);
         
         previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Block.mat");
+        blockAtlas = AssetDatabase.LoadAssetAtPath<Texture2DArray>("Assets/Textures/BlockAtlas.png");
+        previewMeshData = AssetDatabase.LoadAssetAtPath<BlockMeshData>("Assets/SO/Mesh Datas/CenteredBlockMesh.asset");
         
         isInitialized = true;
+    }
+
+    private void OnEnable()
+    {
+        rotationAmount = 0;
+        typeProperty = serializedObject.FindProperty("Type");
+        meshDataObject = serializedObject.FindProperty("MeshData");
+        defaultColor = serializedObject.FindProperty("DefaultColor");
     }
 
     public override void OnInspectorGUI()
     {
         serializedObject.Update();
         if (!isInitialized) InitializePreviewRenderer();
-        BlockData blockData = (BlockData) target;
-        
-        
-        
-        GUILayout.BeginVertical();
-        blockData.Type = (BlockType)EditorGUILayout.EnumPopup("Type", blockData.Type);
-        blockData.MeshData = EditorGUILayout.ObjectField("Mesh Data", blockData.MeshData, typeof(BlockMeshData), false) as BlockMeshData;
-        blockData.DefaultColor = EditorGUILayout.ColorField("Default Color", blockData.DefaultColor);
+        BlockData blockData = (BlockData)target;
+    
+        EditorGUILayout.PropertyField(typeProperty);
+        EditorGUILayout.ObjectField(meshDataObject, typeof(BlockMeshData));
+        EditorGUILayout.PropertyField(defaultColor);
+    
+        EditorGUILayout.Space(10);
 
-        DrawBlockPreview(new Rect(100, 100, 250, 250), blockData);
-        GUILayout.EndVertical();
-        
-        
-        
-        // Force repaint to animate rotation
-        EditorUtility.SetDirty(target);
+        foreach (var dir in Globals.Directions_3D)
+        {
+            GUILayout.BeginHorizontal();
+            GUILayout.Label(dir.Key.ToString() + " Face");
+            GUILayout.FlexibleSpace();
+            Texture2D img = new Texture2D(16,16);
+            img.SetPixels(blockAtlas.GetPixels(blockData.GetTextureSliceIndex(dir.Key)));
+            img.Apply();
+            if (GUILayout.Button(img, GUILayout.Width(32), GUILayout.Height(32)))
+            {
+                BlockTextureSelectionWindow.ShowWindow(blockAtlas,blockData,dir.Key);
+            }
+            GUILayout.EndHorizontal();
+        }
+    
+        EditorGUILayout.Space(10);
+    
+        Rect previewRect = GUILayoutUtility.GetRect(250, 250);
+        DrawBlockPreview(previewRect, blockData);
+        if (previewRect.Contains(Event.current.mousePosition))
+        {
+            Repaint();
+        }
+    
         serializedObject.ApplyModifiedProperties();
-    }
-
+    }  
+    
     private void DrawBlockPreview(Rect previewRect, BlockData blockData)
     {
                 if (previewRenderer == null) return;
@@ -61,13 +93,15 @@ public class BlockDataEditor : Editor
             
             foreach (var dir in Globals.Directions_3D)
             {
-                meshBuilder.AddFace(blockData.MeshData.GetFaceData(dir.Key), dir.Key, Vector3Int.zero, blockData.GetTextureSliceIndex(dir.Key), blockData.DefaultColor);
+                meshBuilder.AddFace(previewMeshData.GetFaceData(dir.Key), dir.Key, Vector3Int.zero, blockData.GetTextureSliceIndex(dir.Key), blockData.DefaultColor);
             }
             
             Mesh blockMesh = meshBuilder.Build();
+
+            rotationAmount += 0.5f;
+            if (rotationAmount >= 360) rotationAmount -= 360;
+            previewRenderer.DrawMesh(blockMesh, Vector3.zero, Quaternion.Euler(0,rotationAmount,0), previewMaterial, 0);
             
-            previewRenderer.DrawMesh(blockMesh, -Vector3.one/2, Quaternion.Euler(0,45,0), previewMaterial, 0);
-                
             previewRenderer.camera.Render();
         }
         

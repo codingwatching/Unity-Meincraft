@@ -36,4 +36,14 @@ public class BlockMeshData : ScriptableObject
 public class BlockFaceData
 {
     public Vector3[] Vertices;
+
+    public BlockFaceData(BlockFaceData clone)
+    {
+        this.Vertices = clone.Vertices;
+    }
+
+    public BlockFaceData()
+    {
+        this.Vertices = new Vector3[0];
+    }
 }
