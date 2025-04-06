@@ -1,4 +1,5 @@
 using System;
+using Unity.Android.Gradle;
 using UnityEditor;
 using UnityEngine;
 
@@ -10,23 +11,32 @@ public class BlockDataEditor : Editor
     private BlockMeshData previewMeshData;
     Texture2DArray blockAtlas;
     private bool isInitialized;
-    private float rotationAmount;
+
+    private Vector2 lastMousePosition;
+    private bool isDragging;
+    private bool isMouseOver;
+    private Vector2 cameraOrbit = new Vector2(0f, 45f);
+    private float cameraOrbitSpeed = 1f;
+    private float cameraDistance = 3f;
     
     private SerializedProperty typeProperty;
+    private SerializedProperty isSolidProperty;
     private SerializedProperty meshDataObject;
     private SerializedProperty defaultColor;
     void InitializePreviewRenderer()
     {
         if (isInitialized) return;
+        BlockData blockData = (BlockData)target;
         
         previewRenderer = new PreviewRenderUtility();
         previewRenderer.camera.nearClipPlane = 0.001f;
         previewRenderer.camera.farClipPlane = 100f;
         previewRenderer.camera.clearFlags = CameraClearFlags.Skybox;
-        previewRenderer.camera.transform.position = new Vector3(0, 5f, -10);
-        previewRenderer.camera.transform.LookAt(Vector3.zero, Vector3.up);
+        previewRenderer.camera.fieldOfView = 50;
+        UpdateCameraPosition();
         
-        previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Block.mat");
+        if(blockData.IsSolid) previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Block.mat");
+        else previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Water.mat");
         blockAtlas = AssetDatabase.LoadAssetAtPath<Texture2DArray>("Assets/Textures/BlockAtlas.png");
         previewMeshData = AssetDatabase.LoadAssetAtPath<BlockMeshData>("Assets/SO/Mesh Datas/CenteredBlockMesh.asset");
         
@@ -35,8 +45,8 @@ public class BlockDataEditor : Editor
 
     private void OnEnable()
     {
-        rotationAmount = 0;
         typeProperty = serializedObject.FindProperty("Type");
+        isSolidProperty = serializedObject.FindProperty("IsSolid");
         meshDataObject = serializedObject.FindProperty("MeshData");
         defaultColor = serializedObject.FindProperty("DefaultColor");
     }
@@ -48,6 +58,7 @@ public class BlockDataEditor : Editor
         BlockData blockData = (BlockData)target;
     
         EditorGUILayout.PropertyField(typeProperty);
+        EditorGUILayout.PropertyField(isSolidProperty);
         EditorGUILayout.ObjectField(meshDataObject, typeof(BlockMeshData));
         EditorGUILayout.PropertyField(defaultColor);
     
@@ -72,45 +83,79 @@ public class BlockDataEditor : Editor
     
         Rect previewRect = GUILayoutUtility.GetRect(250, 250);
         DrawBlockPreview(previewRect, blockData);
-        if (previewRect.Contains(Event.current.mousePosition))
+        
+        Event currentEvent = Event.current;
+        isMouseOver = previewRect.Contains(currentEvent.mousePosition);
+
+        if (isMouseOver)
         {
-            Repaint();
+            switch (currentEvent.type)
+            {
+                case EventType.MouseDown:
+                    isDragging = true;
+                    lastMousePosition = currentEvent.mousePosition;
+                    break;
+                case EventType.MouseUp:
+                    isDragging = false;
+                    break;
+            }
+            if (isDragging)
+            {
+                float deltaX = currentEvent.mousePosition.x - lastMousePosition.x;
+                float deltaY = currentEvent.mousePosition.y - lastMousePosition.y;
+                        
+                cameraOrbit.y += deltaX * cameraOrbitSpeed;
+                cameraOrbit.x += deltaY * cameraOrbitSpeed;
+            
+                cameraOrbit.x = Mathf.Clamp(cameraOrbit.x, -85f, 85f);
+                        
+                lastMousePosition = currentEvent.mousePosition;
+                EditorGUIUtility.AddCursorRect(previewRect, MouseCursor.Pan);
+                UpdateCameraPosition();
+            }
         }
-    
         serializedObject.ApplyModifiedProperties();
     }  
     
     private void DrawBlockPreview(Rect previewRect, BlockData blockData)
     {
-                if (previewRenderer == null) return;
+        if (previewRenderer == null) return;
         
         // Start the preview
         previewRenderer.BeginPreview(previewRect, GUIStyle.none);
         
-        if (blockData.MeshData != null)
+        MeshBuilder meshBuilder = new MeshBuilder();
+            
+        foreach (var dir in Globals.Directions_3D)
         {
-            MeshBuilder meshBuilder = new MeshBuilder();
-            
-            foreach (var dir in Globals.Directions_3D)
-            {
-                meshBuilder.AddFace(previewMeshData.GetFaceData(dir.Key), dir.Key, Vector3Int.zero, blockData.GetTextureSliceIndex(dir.Key), blockData.DefaultColor);
-            }
-            
-            Mesh blockMesh = meshBuilder.Build();
-
-            rotationAmount += 0.5f;
-            if (rotationAmount >= 360) rotationAmount -= 360;
-            previewRenderer.DrawMesh(blockMesh, Vector3.zero, Quaternion.Euler(0,rotationAmount,0), previewMaterial, 0);
-            
-            previewRenderer.camera.Render();
+            meshBuilder.AddFace(previewMeshData.GetFaceData(dir.Key), dir.Key, Vector3Int.zero, blockData.GetTextureSliceIndex(dir.Key), blockData.DefaultColor);
         }
+            
+        Mesh blockMesh = meshBuilder.Build();
+        previewRenderer.DrawMesh(blockMesh, Vector3.zero, Quaternion.identity, previewMaterial, 0);
+            
+        previewRenderer.camera.Render();
         
         GUI.DrawTexture(previewRect, previewRenderer.EndPreview());
         
         Rect labelRect = new Rect(previewRect.x, previewRect.y + previewRect.height - 20, previewRect.width, 20);
         GUI.Label(labelRect, "Block Preview", EditorStyles.centeredGreyMiniLabel);
     }
-    
+    private void UpdateCameraPosition()
+    {
+        float horizontalRadians = cameraOrbit.y * Mathf.Deg2Rad;
+        float verticalRadians = cameraOrbit.x * Mathf.Deg2Rad;
+        
+        float x = Mathf.Sin(horizontalRadians) * Mathf.Cos(verticalRadians);
+        float y = Mathf.Sin(verticalRadians);
+        float z = Mathf.Cos(horizontalRadians) * Mathf.Cos(verticalRadians);
+        
+        Vector3 cameraPosition = new Vector3(x, y, z);
+        previewRenderer.camera.transform.position = cameraPosition * cameraDistance;
+        previewRenderer.camera.transform.LookAt(Vector3.zero, Vector3.up);
+        
+        Repaint();
+    }
     // Clean up the preview renderer when the drawer is destroyed
     ~BlockDataEditor()
     {

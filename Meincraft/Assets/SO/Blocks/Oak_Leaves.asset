@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Oak_Leaves
   m_EditorClassIdentifier: 
   Type: 7
-  IsSolid: 0
+  IsSolid: 1
   MeshData: {fileID: 11400000, guid: c4e55963980fdc341af2a6736ed7fcdd, type: 2}
   DefaultColor: {r: 0.08627451, g: 0.64705884, b: 0, a: 1}
   TopFace: 4

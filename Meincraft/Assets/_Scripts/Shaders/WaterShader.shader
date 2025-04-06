@@ -4,7 +4,6 @@ Shader "Meincraft/Water Shader"
     {
         _MainTex ("Texture", 2DArray) = "white" {}
         _WaterHeight ("Water Height", Float) = 0.9
-        _Alpha ("Alpha", Float) = 0.5
     }
     SubShader
     {
@@ -40,7 +39,6 @@ Shader "Meincraft/Water Shader"
             UNITY_DECLARE_TEX2DARRAY(_MainTex);
             
             float _WaterHeight;
-            float _Alpha;
             
             v2f vert (appdata v)
             {
@@ -55,9 +53,9 @@ Shader "Meincraft/Water Shader"
             fixed4 frag (v2f i) : SV_Target
             {
                 fixed4 color = UNITY_SAMPLE_TEX2DARRAY(_MainTex, i.uv.xyz);
-                color *= i.color;
+                color.rgb *= i.color.rgb;
+                color.a = i.color.a;
                 UNITY_APPLY_FOG(i.fogCoord, color);
-                color.a = _Alpha;
                 return color;
             }
             ENDCG

@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Dirt
   m_EditorClassIdentifier: 
   Type: 2
-  IsSolid: 0
+  IsSolid: 1
   MeshData: {fileID: 11400000, guid: c4e55963980fdc341af2a6736ed7fcdd, type: 2}
   DefaultColor: {r: 1, g: 1, b: 1, a: 1}
   TopFace: 1

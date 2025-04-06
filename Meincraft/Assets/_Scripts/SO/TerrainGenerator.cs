@@ -96,11 +96,6 @@ public class TerrainGenerator : ScriptableObject
                     else if (y == intHeight - 1)
                     {
                         result[x, y, z] = (byte)BlockType.GRASS;
-
-                        if (x > 2 && z > 2 && x < Globals.ChunkSize - 2 && z < Globals.ChunkSize - 2)
-                        {
-                            
-                        }
                     }
                     // Stone for everything else
                     else
@@ -109,11 +104,27 @@ public class TerrainGenerator : ScriptableObject
                     }
                 }
 
-                for (int y = 0; y < Globals.ChunkHeight; y++)
+                for (int y = 0; y < Globals.ChunkHeight; y++)//Water pass
                 {
                     if (y < WaterHeight && y >= intHeight)
                     {
                         result[x, y, z] = (byte)BlockType.WATER;
+                    }
+                }
+
+                for (int y = 0; y < intHeight; y++)//Tree pass
+                {
+                    if (y == intHeight - 1 && result[x, y + 1, z] == (byte) BlockType.AIR)
+                    {
+                        if (x > 2 && z > 2 && x < Globals.ChunkSize - 2 && z < Globals.ChunkSize - 2)
+                        {
+                            if (Random.Range(0, 16) == 0)
+                            {
+                                result[x, y + 1, z] = (byte)BlockType.OAK_LOG;
+                                result[x, y + 2, z] = (byte)BlockType.OAK_LOG;
+                                result[x, y + 3, z] = (byte)BlockType.OAK_LOG;
+                            }
+                        }
                     }
                 }
             }
