@@ -7,16 +7,15 @@ using UnityEngine.UIElements;
 
 public class BlockTextureSelectionWindow : EditorWindow
 {
-    private static BlockData targetBlockData;
-    private static Globals.Direction targetFace;
     private static Texture2DArray blockAtlas;
 
     private Vector2 scrollPos;
-    public static void ShowWindow(Texture2DArray atlas, BlockData blockData, Globals.Direction face)
+    
+    private static event Action<int> onClose;
+    public static void ShowWindow(Texture2DArray atlas, Action<int> onCloseEvent)
     {
-        targetBlockData = blockData;
-        targetFace = face;
-        blockAtlas = atlas;
+        onClose = onCloseEvent;
+        
         BlockTextureSelectionWindow window = CreateInstance<BlockTextureSelectionWindow>();
         var position = window.position;
         position.center = new Rect(0f, 0f, Screen.currentResolution.width/2f, Screen.currentResolution.height/2f).position;
@@ -50,27 +49,7 @@ public class BlockTextureSelectionWindow : EditorWindow
         });
         if (res != -1)
         {
-            switch (targetFace)
-            {
-                case Globals.Direction.UP:
-                    targetBlockData.TopFace = res;
-                    break;
-                case Globals.Direction.DOWN:
-                    targetBlockData.BottomFace = res;
-                    break;
-                case Globals.Direction.FRONT:
-                    targetBlockData.FrontFace = res;
-                    break;
-                case Globals.Direction.BACK:
-                    targetBlockData.BackFace = res;
-                    break;
-                case Globals.Direction.LEFT:
-                    targetBlockData.LeftFace = res;
-                    break;
-                case Globals.Direction.RIGHT:
-                    targetBlockData.RightFace = res;
-                    break;
-            }
+            onClose?.Invoke(res);
             Close();
         }
         EditorGUILayout.EndScrollView();

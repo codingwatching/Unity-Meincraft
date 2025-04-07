@@ -1,5 +1,4 @@
 using System;
-using Unity.Android.Gradle;
 using UnityEditor;
 using UnityEngine;
 
@@ -12,6 +11,7 @@ public class BlockDataEditor : Editor
     Texture2DArray blockAtlas;
     private bool isInitialized;
     private Mesh blockMesh;
+    private MeshBuilder blockMeshBuilder;
 
     private Vector2 lastMousePosition;
     private bool isDragging;
@@ -36,17 +36,11 @@ public class BlockDataEditor : Editor
         previewRenderer.camera.fieldOfView = 50;
         UpdateCameraPosition();
         
-        if(blockData.IsSolid) previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Block.mat");
-        else previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Water.mat");
         blockAtlas = AssetDatabase.LoadAssetAtPath<Texture2DArray>("Assets/Textures/BlockAtlas.png");
         previewMeshData = AssetDatabase.LoadAssetAtPath<BlockMeshData>("Assets/SO/Mesh Datas/CenteredBlockMesh.asset");
         
-        MeshBuilder meshBuilder = new MeshBuilder();
-        foreach (var dir in Globals.Directions_3D)
-        {
-            meshBuilder.AddFace(previewMeshData.GetFaceData(dir.Key), dir.Key, Vector3Int.zero, blockData.GetTextureSliceIndex(dir.Key), blockData.DefaultColor);
-        }
-        blockMesh = meshBuilder.Build();
+        blockMeshBuilder = new MeshBuilder();
+        UpdateBlockMesh(blockData);
         
         isInitialized = true;
     }
@@ -82,7 +76,31 @@ public class BlockDataEditor : Editor
             img.Apply();
             if (GUILayout.Button(img, GUILayout.Width(32), GUILayout.Height(32)))
             {
-                BlockTextureSelectionWindow.ShowWindow(blockAtlas,blockData,dir.Key);
+                BlockTextureSelectionWindow.ShowWindow(blockAtlas, (selectedTextureSlice) =>
+                {
+                    switch (dir.Key)
+                    {
+                        case Globals.Direction.UP:
+                            blockData.TopFace = selectedTextureSlice;
+                            break;
+                        case Globals.Direction.DOWN:
+                            blockData.BottomFace = selectedTextureSlice;
+                            break;
+                        case Globals.Direction.FRONT:
+                            blockData.FrontFace = selectedTextureSlice;
+                            break;
+                        case Globals.Direction.BACK:
+                            blockData.BackFace = selectedTextureSlice;
+                            break;
+                        case Globals.Direction.LEFT:
+                            blockData.LeftFace = selectedTextureSlice;
+                            break;
+                        case Globals.Direction.RIGHT:
+                            blockData.RightFace = selectedTextureSlice;
+                            break;
+                    }
+                    UpdateBlockMesh(blockData);
+                });
             }
             GUILayout.EndHorizontal();
         }
@@ -90,7 +108,7 @@ public class BlockDataEditor : Editor
         EditorGUILayout.Space(10);
     
         Rect previewRect = GUILayoutUtility.GetRect(250, 250);
-        DrawBlockPreview(previewRect, blockData);
+        DrawBlockPreview(previewRect);
         
         Event currentEvent = Event.current;
         isMouseOver = previewRect.Contains(currentEvent.mousePosition);
@@ -122,10 +140,14 @@ public class BlockDataEditor : Editor
                 UpdateCameraPosition();
             }
         }
+        if (Event.current.type == EventType.Repaint)
+        {
+            UpdateBlockMesh(blockData);
+        }
         serializedObject.ApplyModifiedProperties();
     }  
     
-    private void DrawBlockPreview(Rect previewRect, BlockData blockData)
+    private void DrawBlockPreview(Rect previewRect)
     {
         if (previewRenderer == null) return;
         
@@ -154,6 +176,19 @@ public class BlockDataEditor : Editor
         previewRenderer.camera.transform.LookAt(Vector3.zero, Vector3.up);
         
         Repaint();
+    }
+
+    private void UpdateBlockMesh(BlockData blockData)
+    {
+        blockMeshBuilder.Clear();
+        if(blockData.IsSolid) previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Block.mat");
+        else previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Water.mat");
+        
+        foreach (var dir in Globals.Directions_3D)
+        {
+            blockMeshBuilder.AddFace(previewMeshData.GetFaceData(dir.Key), dir.Key, Vector3Int.zero, blockData.GetTextureSliceIndex(dir.Key), blockData.DefaultColor);
+        }
+        blockMesh = blockMeshBuilder.Build();
     }
     // Clean up the preview renderer when the drawer is destroyed
     ~BlockDataEditor()
