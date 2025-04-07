@@ -11,6 +11,7 @@ public class BlockDataEditor : Editor
     private BlockMeshData previewMeshData;
     Texture2DArray blockAtlas;
     private bool isInitialized;
+    private Mesh blockMesh;
 
     private Vector2 lastMousePosition;
     private bool isDragging;
@@ -39,6 +40,13 @@ public class BlockDataEditor : Editor
         else previewMaterial = AssetDatabase.LoadAssetAtPath<Material>("Assets/Materials/Water.mat");
         blockAtlas = AssetDatabase.LoadAssetAtPath<Texture2DArray>("Assets/Textures/BlockAtlas.png");
         previewMeshData = AssetDatabase.LoadAssetAtPath<BlockMeshData>("Assets/SO/Mesh Datas/CenteredBlockMesh.asset");
+        
+        MeshBuilder meshBuilder = new MeshBuilder();
+        foreach (var dir in Globals.Directions_3D)
+        {
+            meshBuilder.AddFace(previewMeshData.GetFaceData(dir.Key), dir.Key, Vector3Int.zero, blockData.GetTextureSliceIndex(dir.Key), blockData.DefaultColor);
+        }
+        blockMesh = meshBuilder.Build();
         
         isInitialized = true;
     }
@@ -123,15 +131,6 @@ public class BlockDataEditor : Editor
         
         // Start the preview
         previewRenderer.BeginPreview(previewRect, GUIStyle.none);
-        
-        MeshBuilder meshBuilder = new MeshBuilder();
-            
-        foreach (var dir in Globals.Directions_3D)
-        {
-            meshBuilder.AddFace(previewMeshData.GetFaceData(dir.Key), dir.Key, Vector3Int.zero, blockData.GetTextureSliceIndex(dir.Key), blockData.DefaultColor);
-        }
-            
-        Mesh blockMesh = meshBuilder.Build();
         previewRenderer.DrawMesh(blockMesh, Vector3.zero, Quaternion.identity, previewMaterial, 0);
             
         previewRenderer.camera.Render();
