@@ -4,13 +4,13 @@ using UnityEngine;
 
 public enum BlockType : byte
 {
-    GRASS = 1,
-    DIRT = 2,
-    STONE = 3,
-    BEDROCK = 4,
-    WATER = 5,
-    OAK_LOG = 6,
-    OAK_LEAVES = 7,
+    GRASS = 0,
+    DIRT = 1,
+    STONE = 2,
+    BEDROCK = 3,
+    WATER = 4,
+    OAK_LOG = 5,
+    OAK_LEAVES = 6,
     AIR = 255
 }
 public class Globals

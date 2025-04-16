@@ -118,11 +118,25 @@ public class TerrainGenerator : ScriptableObject
                     {
                         if (x > 2 && z > 2 && x < Globals.ChunkSize - 2 && z < Globals.ChunkSize - 2)
                         {
-                            if (Random.Range(0, 16) == 0)
+                            if (Random.Range(0, 64) == 0)
                             {
-                                result[x, y + 1, z] = (byte)BlockType.OAK_LOG;
-                                result[x, y + 2, z] = (byte)BlockType.OAK_LOG;
-                                result[x, y + 3, z] = (byte)BlockType.OAK_LOG;
+                                int trunkHeight = 5;
+                                for (int i = 1; i <= trunkHeight; i++)
+                                {
+                                    result[x, y + i, z] = (byte)BlockType.OAK_LOG;
+                                }
+                                for (int i = 4; i <= 6; i++)
+                                {
+                                    int radius = 6 - i;
+                                    for (int width = -radius; width <= radius; width++)
+                                    {
+                                        for (int depth = -radius; depth <= radius; depth++)
+                                        {
+                                            if(i<trunkHeight && width == 0 && depth == 0) continue;
+                                            result[x + width, y + i, z + depth] = (byte)BlockType.OAK_LEAVES;
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

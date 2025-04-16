@@ -22,6 +22,7 @@ public class BlockDataEditor : Editor
     
     private SerializedProperty typeProperty;
     private SerializedProperty isSolidProperty;
+    private SerializedProperty isTransparentProperty;
     private SerializedProperty meshDataObject;
     private SerializedProperty defaultColor;
     void InitializePreviewRenderer()
@@ -49,6 +50,7 @@ public class BlockDataEditor : Editor
     {
         typeProperty = serializedObject.FindProperty("Type");
         isSolidProperty = serializedObject.FindProperty("IsSolid");
+        isTransparentProperty = serializedObject.FindProperty("IsTransparent");
         meshDataObject = serializedObject.FindProperty("MeshData");
         defaultColor = serializedObject.FindProperty("DefaultColor");
     }
@@ -61,6 +63,7 @@ public class BlockDataEditor : Editor
     
         EditorGUILayout.PropertyField(typeProperty);
         EditorGUILayout.PropertyField(isSolidProperty);
+        EditorGUILayout.PropertyField(isTransparentProperty);
         EditorGUILayout.ObjectField(meshDataObject, typeof(BlockMeshData));
         EditorGUILayout.PropertyField(defaultColor);
     

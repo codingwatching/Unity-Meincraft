@@ -28,6 +28,7 @@ public class BlockData : ScriptableObject
 
     public BlockType Type = 0;
     public bool IsSolid = true;
+    public bool IsTransparent = false;
 
     [Space(10),Header("Mesh Data")]
     public BlockMeshData MeshData;

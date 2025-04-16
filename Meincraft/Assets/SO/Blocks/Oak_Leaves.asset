@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   Type: 7
   IsSolid: 1
+  IsTransparent: 1
   MeshData: {fileID: 11400000, guid: c4e55963980fdc341af2a6736ed7fcdd, type: 2}
   DefaultColor: {r: 0.07547163, g: 0.5660378, b: 0, a: 1}
   TopFace: 4
