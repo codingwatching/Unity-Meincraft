@@ -8,6 +8,8 @@ Shader "Meincraft/Block Shader"
         _BreakProgress ("Break Progress", Range(0, 1)) = 0
         _TargetBlockPosition ("Target Block Position", Vector) = (0, 0, 0, 0)
         _OutlineThickness ("Outline Thickness", Range(0.001, 10)) = 0.01
+        _K("K", Float) = 1
+        _P("P", Float) = 1.3
     }
     SubShader
     {
@@ -22,20 +24,23 @@ Shader "Meincraft/Block Shader"
             #pragma multi_compile_fog
 
             #include "UnityCG.cginc"
+            #include "UnityLightingCommon.cginc"
 
             struct appdata
             {
                 float4 vertex : POSITION;
+                float3 normal : NORMAL;
                 float3 uv : TEXCOORD0;
-                float4 color : COLOR0;
+                float4 color : COLOR;
             };
 
             struct v2f
             {
-                float3 uv : TEXCOORD0;
-                UNITY_FOG_COORDS(1)
                 float4 vertex : SV_POSITION;
-                float4 color : COLOR0;
+                float3 normal : NORMAL;
+                float3 uv : TEXCOORD0;
+                float4 color : COLOR;
+                UNITY_FOG_COORDS(1)
                 float3 worldPos : TEXCOORD2;
             };
 
@@ -48,12 +53,16 @@ Shader "Meincraft/Block Shader"
             float _BreakProgress;
             float _OutlineThickness;
             
+            float _K;
+            float _P;
+            
             v2f vert (appdata v)
             {
                 v2f o;
                 o.vertex = UnityObjectToClipPos(v.vertex);
                 o.uv = v.uv;
                 o.color = v.color;
+                o.normal = v.normal;
                 o.worldPos = mul(unity_ObjectToWorld, v.vertex).xyz;
                 UNITY_TRANSFER_FOG(o,o.vertex);
                 return o;
@@ -95,6 +104,10 @@ Shader "Meincraft/Block Shader"
                 
                 clip(color.a - _AlphaClipping);
                 
+                float3 lightDir = normalize(_WorldSpaceLightPos0.xyz);
+                float lightDot = clamp(dot(i.normal, lightDir), -1, 1);
+                lightDot = exp(-pow(_K*(1 - lightDot), _P));
+                color *= lightDot;
                 UNITY_APPLY_FOG(i.fogCoord, color);
                 return color;
             }

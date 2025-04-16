@@ -3,7 +3,6 @@ Shader "Meincraft/Water Shader"
     Properties
     {
         _MainTex ("Texture", 2DArray) = "white" {}
-        _WaterHeight ("Water Height", Float) = 0.9
     }
     SubShader
     {
@@ -37,8 +36,6 @@ Shader "Meincraft/Water Shader"
             };
 
             UNITY_DECLARE_TEX2DARRAY(_MainTex);
-            
-            float _WaterHeight;
             
             v2f vert (appdata v)
             {
