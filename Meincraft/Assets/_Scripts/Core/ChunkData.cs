@@ -6,9 +6,14 @@ public class ChunkData
     
     public ChunkPosition ChunkPosition;
 
-    public ChunkData(byte[,,] blocks, Vector2Int chunkPosition)
+    public ChunkData(Vector2Int chunkPosition)
     {
         ChunkPosition = new ChunkPosition(chunkPosition);
+        _blocks = new byte[Globals.ChunkSize,Globals.ChunkHeight,Globals.ChunkSize];
+    }
+
+    public void SetBlocks(byte[,,] blocks)
+    {
         _blocks = blocks;
     }
 

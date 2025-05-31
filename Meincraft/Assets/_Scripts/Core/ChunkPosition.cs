@@ -3,17 +3,14 @@
 public class ChunkPosition
 {
     public Vector2Int Position { get; private set; }
+    public Vector2Int WorldPosition { get; private set; }
     public int x => Position.x;
     public int y => Position.y;
-    
-    public ChunkPosition(int x, int z)
-    {
-        Position = new Vector2Int(x, z);
-    }
     
     public ChunkPosition(Vector2Int position)
     {
         this.Position = position;
+        this.WorldPosition = position * Globals.ChunkSize;
     }
 
     public Vector3Int ToVector3Int()

@@ -1,7 +1,10 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using UnityEngine;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
+using UnityEngine;
 using UnityEngine.Profiling;
 using Random = UnityEngine.Random;
 
@@ -23,11 +26,13 @@ public class World : Singleton<World>
     
     
     Queue<Vector2Int> _chunksToLoad = new Queue<Vector2Int>();
+    ConcurrentQueue<TerrainMeshData> chunkMeshQueue = new ConcurrentQueue<TerrainMeshData>();
     Queue<Vector2Int> _chunksToRemove = new Queue<Vector2Int>();
     HashSet<Vector2Int> _activeChunks = new HashSet<Vector2Int>();
 
     Dictionary<Vector2Int, Chunk> _chunks = new Dictionary<Vector2Int, Chunk>();
 
+    private ConcurrentDictionary<Vector2Int, Task> _chunkLoadingTasks = new();
     
     [Space(10)]
     [SerializeField] Chunk ChunkPrefab;
@@ -36,7 +41,7 @@ public class World : Singleton<World>
     private int _worldWidthBlockCount;
     private int _chunkCenter;
     private float _squaredChunkLoadRadius;
-
+    
     private void Start()
     {
         _squaredChunkLoadRadius = Mathf.Pow(ChunkLoadRadius + 0.5f, 2);
@@ -78,7 +83,19 @@ public class World : Singleton<World>
             OnPlayerChunkChanged();
         }
         
-        int loadedChunks = 0;
+        while (chunkMeshQueue.TryDequeue(out var terrainMeshData))
+        {
+            if (_chunks.TryGetValue(terrainMeshData.ChunkPosition, out Chunk chunk))
+            {
+                Profiler.BeginSample("Chunk load");
+                chunk.Clear();
+                chunk.OnMeshDataReceived(terrainMeshData);
+                //chunk.Load();
+                _activeChunks.Add(terrainMeshData.ChunkPosition);
+                Profiler.EndSample();
+            }
+        }
+        /*int loadedChunks = 0;
         while (loadedChunks < chunkLoadPerFrame)
         {
             if (_chunksToLoad.TryDequeue(out Vector2Int chunkToLoad))
@@ -87,15 +104,17 @@ public class World : Singleton<World>
                 {
                     Profiler.BeginSample("Chunk load");
                     chunk.Clear();
-                    chunk.GenerateMeshData();
-                    chunk.Load();
+                    chunkLoadingManager.ScheduleMeshData(chunk);
+                    //chunk.Load();
                     _activeChunks.Add(chunkToLoad);
                     Profiler.EndSample();
                 }
             }
-
             loadedChunks++;
-        }
+        }*/
+        /*while (meshQueue.TryDequeue(out var chunk)) {
+            
+        }*/
 
         int removedChunks = 0;
         while (removedChunks < chunkRemovePerFrame)
@@ -132,9 +151,13 @@ public class World : Singleton<World>
         LoadChunksAroundPlayer(chunkStacksAroundPlayer);
     }
 
-    void LoadChunksAroundPlayer(Vector2Int[] chunksAroundPlayerXZ)
+    async void LoadChunksAroundPlayer(Vector2Int[] chunksAroundPlayerXZ)
     {
-        _chunksToLoad.Clear();//Cleaning the queue for avoid repetitions
+        /*chunkDataCts?.Cancel();
+        chunkDataCts = new CancellationTokenSource();
+        chunkMeshingCts?.Cancel();
+        chunkMeshingCts = new CancellationTokenSource();*/
+        
         Vector2Int playerChunkStack = new Vector2Int(playerCurrentChunkCoordinates.x, playerCurrentChunkCoordinates.y);
     
         //Sort chunk stacks by distance from player to load chunk stacks close to player firstly  
@@ -147,50 +170,60 @@ public class World : Singleton<World>
         for (int i = 0; i < chunksAroundPlayerXZ.Length; i++)
         {
             Vector2Int chunkXZ = new Vector2Int(chunksAroundPlayerXZ[i].x, chunksAroundPlayerXZ[i].y);
+            if(_activeChunks.Contains(chunkXZ)) continue;//Chunk is already loaded
             if(!_chunks.ContainsKey(chunkXZ))
             {
-                _chunks.Add(chunkXZ ,CreateChunk(chunkXZ));
+                var newChunk = CreateChunk(chunkXZ);
+                _chunks.Add(chunkXZ ,newChunk);
+                await Task.Run(() => newChunk.LoadData(terrainGenerator, blockLibrary, true));
+                //_ = LoadChunkDataAsync(newChunk, chunkDataCts.Token);
             }
             
-            if(_activeChunks.Contains(chunkXZ)) continue;//Chunk is already loaded
-            _chunksToLoad.Enqueue(chunkXZ);
+            //_chunksToLoad.Enqueue(chunkXZ);
         }
         SetupChunkNeighbors();
+        
     }
 
-    void SetupChunkNeighbors()
+    async void SetupChunkNeighbors()
     {
         for (int i = 0; i < _chunks.Count; i++)
         {
-            var chunkPos = _chunks.Keys.ElementAt(i);
+            var chunk = _chunks.Values.ElementAt(i);
+            var chunkPos = chunk.Data.ChunkPosition.Position;
             foreach (var dir in Globals.Directions_2D)
             {
                 var nChunkPos = chunkPos + dir.Value;
                 if (_chunks.TryGetValue(nChunkPos, out Chunk nChunk))
                 {
-                    _chunks[chunkPos].SetNeighbor(dir.Key, nChunk);
-                    nChunk.SetNeighbor(Globals.InvertDirection(dir.Key), _chunks[chunkPos]);
+                    chunk.SetNeighbor(dir.Key, nChunk);
+                    nChunk.SetNeighbor(Globals.InvertDirection(dir.Key), chunk);
                 }
 
-                else if(IsInViewDistance(chunkPos))//For avoid infinite loop: At the border of the view distance, neighboring chunks may be out of range. Attempting to set their neighbors could lead to an infinite loop.
+                else if(IsInViewDistance(chunkPos))//if neighbor chunk is out of range but im in the range; so i have to load the neighbor chunk data
                 {
                     Chunk newChunk = CreateChunk(nChunkPos);
-                    _chunks.TryAdd(chunkPos, newChunk);
-
-                    _chunks[chunkPos].SetNeighbor(dir.Key, newChunk);
+                    _chunks.Add(nChunkPos, newChunk);
+                    await Task.Run(() => newChunk.LoadData(terrainGenerator, blockLibrary, false));
+                    //_ = LoadChunkDataAsync(newChunk, chunkDataCts.Token);
+                    chunk.SetNeighbor(dir.Key, newChunk);
                     newChunk.SetNeighbor(Globals.InvertDirection(dir.Key), _chunks[chunkPos]);
                 }
             }
         }
     }
 
+    public void ScheduleChunkMeshingOnMainThread(TerrainMeshData terrainMeshData)
+    {
+        chunkMeshQueue.Enqueue(terrainMeshData);
+    }
+
     Chunk CreateChunk(Vector2Int chunkCoordinates)
     {
-        ChunkPosition chunkPosition = new ChunkPosition(chunkCoordinates);
-        ChunkData chunkData = new ChunkData(terrainGenerator.GetBlocks(chunkCoordinates), chunkCoordinates * Globals.ChunkSize);
+        ChunkData chunkData = new ChunkData(chunkCoordinates);
         GameObject chunkObject = chunkPool.GetObjectFromPool();
-        chunkObject.transform.SetPositionAndRotation(chunkPosition.ToVector3Int() * Globals.ChunkSize, Quaternion.identity);
-                
+        chunkObject.transform.SetPositionAndRotation(chunkData.ChunkPosition.ToVector3Int() * Globals.ChunkSize, Quaternion.identity);
+        
         return new Chunk(chunkData ,chunkObject, blockLibrary);
     }
 
@@ -333,7 +366,7 @@ public class World : Singleton<World>
     {
         return Mathf.FloorToInt(terrainGenerator.GetHeight(x, z)) + 1;
     }
-
+    
     public Bounds GetBlockBounds(int x, int y, int z)
     {
         return new Bounds(new Vector3(x, y, z) + Vector3.one / 2, new Vector3Int(1, 1, 1));
