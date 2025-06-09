@@ -33,6 +33,7 @@ public class World : Singleton<World>
     Dictionary<Vector2Int, Chunk> _chunks = new Dictionary<Vector2Int, Chunk>();
 
     private ConcurrentDictionary<Vector2Int, Task> _chunkLoadingTasks = new();
+    CancellationTokenSource taskTokenSource = new CancellationTokenSource();
     
     [Space(10)]
     [SerializeField] Chunk ChunkPrefab;
@@ -133,6 +134,17 @@ public class World : Singleton<World>
         }
     }
 
+    public struct ChunkTaskData
+    {
+        public readonly byte[,,] Blocks;
+        public readonly bool GenerateMesh;
+
+        public ChunkTaskData(byte[,,] blocks, bool generateMesh)
+        {
+            this.Blocks = blocks;
+            this.GenerateMesh = generateMesh;
+        }
+    }
     private void OnPlayerChunkChanged()
     {
         Vector2Int[] chunkStacksAroundPlayer = GetChunkStacksAroundPlayer();
@@ -167,6 +179,7 @@ public class World : Singleton<World>
             return distA.CompareTo(distB);
         });
 
+        Dictionary<Vector2Int, bool> chunksToCreate = new Dictionary<Vector2Int, bool>();
         for (int i = 0; i < chunksAroundPlayerXZ.Length; i++)
         {
             Vector2Int chunkXZ = new Vector2Int(chunksAroundPlayerXZ[i].x, chunksAroundPlayerXZ[i].y);
@@ -175,18 +188,12 @@ public class World : Singleton<World>
             {
                 var newChunk = CreateChunk(chunkXZ);
                 _chunks.Add(chunkXZ ,newChunk);
-                await Task.Run(() => newChunk.LoadData(terrainGenerator, blockLibrary, true));
+                chunksToCreate.Add(chunkXZ, true);
                 //_ = LoadChunkDataAsync(newChunk, chunkDataCts.Token);
             }
             
             //_chunksToLoad.Enqueue(chunkXZ);
         }
-        SetupChunkNeighbors();
-        
-    }
-
-    async void SetupChunkNeighbors()
-    {
         for (int i = 0; i < _chunks.Count; i++)
         {
             var chunk = _chunks.Values.ElementAt(i);
@@ -204,11 +211,31 @@ public class World : Singleton<World>
                 {
                     Chunk newChunk = CreateChunk(nChunkPos);
                     _chunks.Add(nChunkPos, newChunk);
-                    await Task.Run(() => newChunk.LoadData(terrainGenerator, blockLibrary, false));
+                    chunksToCreate.TryAdd(nChunkPos, false);
                     //_ = LoadChunkDataAsync(newChunk, chunkDataCts.Token);
                     chunk.SetNeighbor(dir.Key, newChunk);
                     newChunk.SetNeighbor(Globals.InvertDirection(dir.Key), _chunks[chunkPos]);
                 }
+            }
+        }
+        ConcurrentDictionary<Vector2Int, ChunkTaskData> dataDictionary = null;
+
+        try
+        {
+            dataDictionary = await CalculateWorldChunkData(chunksToCreate);
+        }
+        catch (Exception)
+        {
+            Debug.Log("Task canceled");
+            return;
+        }
+        foreach (var calculatedData in dataDictionary)
+        {
+            _chunks[calculatedData.Key].Data.SetBlocks(calculatedData.Value.Blocks);
+            if (calculatedData.Value.GenerateMesh)
+            {
+                var meshData = await Task.Run(() => _chunks[calculatedData.Key].LoadMeshDataAsync(blockLibrary));
+                ScheduleChunkMeshingOnMainThread(meshData);
             }
         }
     }
@@ -216,6 +243,29 @@ public class World : Singleton<World>
     public void ScheduleChunkMeshingOnMainThread(TerrainMeshData terrainMeshData)
     {
         chunkMeshQueue.Enqueue(terrainMeshData);
+    }
+    private Task<ConcurrentDictionary<Vector2Int, ChunkTaskData>> CalculateWorldChunkData(Dictionary<Vector2Int, bool> chunkDataPositionsToCreate)
+    {
+        ConcurrentDictionary<Vector2Int, ChunkTaskData> dictionary = new ConcurrentDictionary<Vector2Int, ChunkTaskData>();
+
+        return Task.Run(() => 
+            {
+                foreach (var kvp in chunkDataPositionsToCreate)
+                {
+                    if (taskTokenSource.Token.IsCancellationRequested)
+                    {
+                        taskTokenSource.Token.ThrowIfCancellationRequested();
+                    }
+                    
+                    var blocks = terrainGenerator.GetBlocks(_chunks[kvp.Key].Data.ChunkPosition.WorldPosition);
+                    dictionary.TryAdd(kvp.Key, new ChunkTaskData(blocks, kvp.Value));
+                }
+                return dictionary;
+            },
+            taskTokenSource.Token
+        );
+        
+        
     }
 
     Chunk CreateChunk(Vector2Int chunkCoordinates)

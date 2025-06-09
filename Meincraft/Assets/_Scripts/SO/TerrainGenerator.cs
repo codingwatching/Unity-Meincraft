@@ -38,11 +38,9 @@ public class TerrainGenerator : ScriptableObject
         }
         random = new Random(Seed);
     }
-    public async Task<byte[,,]> GetBlocks(Vector2Int chunkStackWorldPosition, CancellationToken cts)
+    public byte[,,] GetBlocks(Vector2Int chunkStackWorldPosition)
     {
-        return await Task.Run(() =>
-        {
-            var result = new byte[Globals.ChunkSize, Globals.ChunkHeight, Globals.ChunkSize];
+        var result = new byte[Globals.ChunkSize, Globals.ChunkHeight, Globals.ChunkSize];
             
             //Initialize the entire chunk to AIR
             for (int x = 0; x < Globals.ChunkSize; x++)
@@ -147,15 +145,9 @@ public class TerrainGenerator : ScriptableObject
                             }
                         }
                     }
-
-                    if (cts.IsCancellationRequested)
-                    {
-                        return null;
-                    }
                 }
             }
             return result;
-        }, cts);
     }
     public float GetHeight(int x, int z)
     {
